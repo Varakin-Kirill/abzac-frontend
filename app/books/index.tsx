@@ -1,18 +1,18 @@
 ﻿import { useCallback, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, TouchableOpacity, View } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 
 import { BookPreview } from "components/common/bookPreview";
 import { ThemedText } from "components/common/text";
-import { Book, getFavoriteBooks, getReadingBooksProgress, hasAccessToken, ReadingBookProgress } from "utils/api";
+import { Book, getBooks, getReadingBooksProgress, hasAccessToken, ReadingBookProgress } from "utils/api";
 
 function getAuthorName(book: Book) {
   if (!book.author) return "Автор не указан";
   return `${book.author.name} ${book.author.surname}`.trim();
 }
 
-export default function Likes() {
+export default function BooksCatalog() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [readingBooks, setReadingBooks] = useState<ReadingBookProgress[]>([]);
@@ -20,17 +20,17 @@ export default function Likes() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  const loadFavorites = useCallback(async (refresh = false) => {
+  const loadBooks = useCallback(async (refresh = false) => {
     setError("");
     if (refresh) setIsRefreshing(true);
     else setIsLoading(true);
 
     try {
-      const [favoriteBooks, progressData] = await Promise.all([getFavoriteBooks(), getReadingBooksProgress()]);
-      setBooks(favoriteBooks);
+      const [bookData, progressData] = await Promise.all([getBooks(), getReadingBooksProgress()]);
+      setBooks(bookData);
       setReadingBooks(progressData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось загрузить избранное");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить каталог");
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -43,48 +43,44 @@ export default function Likes() {
         router.replace("/login");
         return;
       }
-      loadFavorites();
-    }, [loadFavorites, router]),
+      loadBooks();
+    }, [loadBooks, router]),
   );
 
   const progressByBook = new Map(readingBooks.map((item) => [item.book.book_id, item.progress]));
 
   return (
     <View className="bg-main-gray flex-1">
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-[#3E4043]">
+        <View className="flex-row items-center gap-2">
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} className="w-9 h-9 items-center justify-center">
+            <MaterialIcons name="chevron-left" size={30} color="white" />
+          </TouchableOpacity>
+          <ThemedText className="text-white text-[20px]" weight="bold">Библиотека</ThemedText>
+        </View>
+        <TouchableOpacity onPress={() => router.push("/search")} className="w-10 h-10 rounded-full bg-main-graySecond items-center justify-center">
+          <Feather name="search" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         className="flex-1 px-6"
         contentContainerStyle={{ paddingBottom: 130 }}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadFavorites(true)} />}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => loadBooks(true)} />}
       >
-        <View className="flex-row items-center justify-between mt-3 mb-6">
-          <ThemedText className="text-white text-[24px]" weight="bold">
-            Избранное
-          </ThemedText>
-          <ThemedText className="text-main-textSecond text-[13px]">
-            {books.length} книг
-          </ThemedText>
+        <View className="flex-row items-center justify-between mt-6 mb-5">
+          <ThemedText className="text-main-textSecond text-[14px]">Все книги</ThemedText>
+          <ThemedText className="text-main-textSecond text-[13px]">{books.length} книг</ThemedText>
         </View>
 
         {isLoading ? (
-          <View className="h-64 items-center justify-center">
-            <ActivityIndicator color="#F03A52" />
-          </View>
+          <View className="h-64 items-center justify-center"><ActivityIndicator color="#F03A52" /></View>
         ) : error ? (
           <View className="border border-[#3E4043] rounded-[8px] p-4 gap-4">
             <ThemedText className="text-main-brand">{error}</ThemedText>
-            <TouchableOpacity className="bg-main-brand rounded-[8px] py-3 items-center" onPress={() => loadFavorites()}>
+            <TouchableOpacity className="bg-main-brand rounded-[8px] py-3 items-center" onPress={() => loadBooks()}>
               <ThemedText className="text-white" weight="bold">Повторить</ThemedText>
             </TouchableOpacity>
-          </View>
-        ) : books.length === 0 ? (
-          <View className="h-64 items-center justify-center gap-3">
-            <MaterialIcons name="favorite-border" size={42} color="#8E959C" />
-            <ThemedText className="text-white text-[17px] text-center" weight="bold">
-              В избранном пока пусто
-            </ThemedText>
-            <ThemedText className="text-main-textSecond text-[13px] text-center">
-              Добавляйте книги из их карточек, чтобы быстро находить их позже.
-            </ThemedText>
           </View>
         ) : (
           <View className="flex-row flex-wrap gap-x-5 gap-y-6">
@@ -103,5 +99,3 @@ export default function Likes() {
     </View>
   );
 }
-
-

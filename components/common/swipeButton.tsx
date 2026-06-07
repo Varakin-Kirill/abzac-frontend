@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Animated, PanResponder } from "react-native";
+﻿import { useRef, useState } from "react";
+import { Animated, PanResponder, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ThemedText } from "./text";
 
@@ -40,7 +40,7 @@ export function SwipeButton({
 					Animated.timing(translateX, {
 						toValue: endValue,
 						duration: 200,
-						useNativeDriver: true,
+						useNativeDriver: Platform.OS !== "web",
 					}).start(() => {
 						if (endValue === 300) {
 							setIsActive(true);
@@ -77,3 +77,4 @@ export function SwipeButton({
 		</Animated.View>
 	);
 }
+

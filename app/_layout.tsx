@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Animated, Easing } from "react-native";
+﻿import { View, TouchableOpacity, Animated, Easing, Platform } from "react-native";
 import { SplashScreen, Stack, usePathname, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../global.css";
@@ -6,10 +6,12 @@ import "../global.css";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { useEffect, useRef, useState } from "react";
+import { setUnauthorizedHandler } from "utils/api";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+	const router = useRouter();
 	const [loaded, error] = useFonts({
 		"Rubik-Regular": require("../assets/fonts/Rubik-Regular.ttf"),
 		"Rubik-Bold": require("../assets/fonts/Rubik-Bold.ttf"),
@@ -24,6 +26,11 @@ export default function RootLayout() {
 		"Rubik-Black": require("../assets/fonts/Rubik-Black.ttf"),
 		"Rubik-BlackItalic": require("../assets/fonts/Rubik-BlackItalic.ttf"),
 	});
+
+	useEffect(() => {
+		setUnauthorizedHandler(() => router.replace("/login"));
+		return () => setUnauthorizedHandler(null);
+	}, [router]);
 
 	useEffect(() => {
 		if (loaded || error) {
@@ -50,7 +57,7 @@ export const Tabs = () => {
 	const animatedValue = useRef(new Animated.Value(150)).current;
 	const [isVisible, setIsVisible] = useState(false);
 
-	const shouldShow = !pathname.includes("reader");
+	const shouldShow = !pathname.includes("reader") && pathname !== "/login" && pathname !== "/register";
 
 	useEffect(() => {
 		if (shouldShow) {
@@ -59,14 +66,14 @@ export const Tabs = () => {
 				toValue: 0,
 				duration: 350,
 				easing: Easing.out(Easing.cubic),
-				useNativeDriver: true,
+				useNativeDriver: Platform.OS !== "web",
 			}).start();
 		} else {
 			Animated.timing(animatedValue, {
 				toValue: 150,
 				duration: 300,
 				easing: Easing.in(Easing.cubic),
-				useNativeDriver: true,
+				useNativeDriver: Platform.OS !== "web",
 			}).start(() => {
 				setIsVisible(false);
 			});
@@ -148,3 +155,9 @@ export const Tabs = () => {
 		</Animated.View>
 	);
 };
+
+
+
+
+
+
