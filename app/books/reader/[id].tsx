@@ -4,7 +4,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ThemedText } from "components/common/text";
-import { SwipeButton } from "components/common/swipeButton";
 import {
   completeReading,
   getQuizQuestions,
@@ -226,7 +225,16 @@ export default function Reader() {
                   <ActivityIndicator color="#F03A52" />
                 </View>
               ) : isLatestFragment ? (
-                <SwipeButton text="Отметить прочитанным" onSwipe={handleComplete} />
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleComplete}
+                  className="h-[64px] rounded-full bg-main-brand flex-row items-center justify-center gap-2"
+                >
+                  <MaterialIcons name="check-circle" size={24} color="white" />
+                  <ThemedText className="text-white text-[16px]" weight="bold">
+                    Отметить прочитанным
+                  </ThemedText>
+                </TouchableOpacity>
               ) : null}
             </View>
           </ScrollView>
